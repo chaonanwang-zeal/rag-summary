@@ -4,7 +4,6 @@ import google.generativeai as genai
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from PIL import Image
 from langchain.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 
@@ -104,12 +103,13 @@ def summarize_vtt(vtt_content, retriever, api_key):
 
 # Streamlit 应用程序
 def main():
-    img = Image.open("images/buzzimage.png")
-    st.image(img, caption="zeal", use_column_width=True)
     st.title("VTT File Processor with RAG 🤖")
     st.markdown(
     """
-    GoogleのAPIを入力 ->　RAG対象のPDFをアップロード -> サマリ対象のVTTをアップロード ->　結果待つ
+    1. GoogleのAPIを入力RAG
+    2. 対象のPDFをアップロード
+    3. サマリ対象のVTTをアップロード
+    4. 結果待つ
     """
     )
 
