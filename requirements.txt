@@ -6,3 +6,4 @@ pypdf
 faiss-cpu
 Pillow
 streamlit
+langchain_community
