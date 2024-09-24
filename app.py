@@ -91,12 +91,12 @@ def summarize_vtt(vtt_content, retriever, api_key):
         return ""
 
 def main():
-    st.title("VTT File Processor with RAG 🤖")
+    st.title("⚡RAG＋VTT議事録BOT🤖")
     st.markdown(
     """
     1. GoogleのAPIを入力
-    2. RAG対象のPDFをアップロード
-    3. サマリ対象のVTTをアップロード
+    2. RAG対象のPDFをアップロード(私はPDFしか読まない!)
+    3. サマリ対象のVTTファイルをアップロード(Teamsから字幕ファイルを出力!)
     4. 結果待つ
     """
     )
@@ -117,9 +117,8 @@ def main():
                     processed_vtt = process_vtt_file(vtt_content)
 
                     with st.spinner("Summarizing VTT based on PDF..."):
-                        summary = summarize_vtt(
-                            processed_vtt, retriever, api_key)
-                        st.text_area("VTT Summary", value=summary, height=300)
+                        summary = summarize_vtt(processed_vtt, retriever, api_key)
+                        st.markdown(f"```text{summary}```")
 
 
 if __name__ == "__main__":
