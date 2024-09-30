@@ -4,7 +4,8 @@ import google.generativeai as genai
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain.vectorstores import FAISS
+# from langchain.vectorstores import FAISS
+from langchain_community.vectorstores.faiss import FAISS
 from langchain.chains import RetrievalQA
 
 
@@ -14,8 +15,8 @@ def process_pdf(uploaded_pdf, api_key):
         CHUNK_OVERLAP = 100
 
         with tempfile.NamedTemporaryFile(delete=False) as temp_pdf:
-            temp_pdf.write(uploaded_pdf.read()) 
-            temp_pdf_path = temp_pdf.name 
+            temp_pdf.write(uploaded_pdf.read())
+            temp_pdf_path = temp_pdf.name
 
         pdf_loader = PyPDFLoader(temp_pdf_path)
         split_pdf_document = pdf_loader.load_and_split()
