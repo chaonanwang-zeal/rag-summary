@@ -69,7 +69,7 @@ def summarize_vtt(vtt_content, retriever, api_key):
         )
 
         question = f"""
-        以下のVTTファイルに基づいて、PDF内容を参考に会議記録をまとめてください。出力フォーマットは以下のようにしてください。
+        PDFの内容を基づいて、VTTファイルの内容を会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
 
         1. 参加者: （会議に参加した人たちの名前）
         2. 会議日時: （会議が行われた日時）
@@ -80,7 +80,7 @@ def summarize_vtt(vtt_content, retriever, api_key):
         5. 根拠:
             - (結論に至った理由やPDFの内容に基づいた根拠)
 
-        以下のVTTファイルの内容を使用してください:
+        VTTファイルの内容はこちらです:
 
         {vtt_content}
         """
