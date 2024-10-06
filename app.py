@@ -106,8 +106,8 @@ def summarize_vtt(vtt_content, retriever, api_key):
             {vtt_content}
             """
 
-            result = gemini_model.generate_content(question)
-            return result.text
+            result = gemini_model.invoke(question)
+            return result.content
 
     except Exception as e:
         st.error(f"Error during summarization: {str(e)}")
