@@ -62,13 +62,14 @@ def summarize_vtt(vtt_content, retriever, api_key):
             temperature=0.8
         )
 
-        qa_chain = RetrievalQA.from_chain_type(
-            gemini_model,
-            retriever=retriever,
-            return_source_documents=True
-        )
-
         if retriever:
+
+            qa_chain = RetrievalQA.from_chain_type(
+                gemini_model,
+                retriever=retriever,
+                return_source_documents=True
+            )
+
             question = f"""
             PDFの内容を基づいて、VTTファイルの内容を会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
 
