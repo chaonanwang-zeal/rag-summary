@@ -54,7 +54,7 @@ def process_vtt_file(vtt_content):
         return ""
 
 
-def summarize_vtt(vtt_content, retriever, api_key, use_pdf):
+def summarize_vtt(vtt_content, retriever, api_key):
     try:
         gemini_model = ChatGoogleGenerativeAI(
             model='gemini-1.5-pro-latest',
@@ -64,11 +64,11 @@ def summarize_vtt(vtt_content, retriever, api_key, use_pdf):
 
         qa_chain = RetrievalQA.from_chain_type(
             gemini_model,
-            retriever=retriever if use_pdf else None,  # 如果没有PDF，retriever将为None
+            retriever=retriever,
             return_source_documents=True
         )
 
-        if use_pdf:
+        if retriever:
             question = f"""
             PDFの内容を基づいて、VTTファイルの内容を会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
 
@@ -85,6 +85,10 @@ def summarize_vtt(vtt_content, retriever, api_key, use_pdf):
 
             {vtt_content}
             """
+
+            result = qa_chain.invoke({"query": question})
+            return result["result"]
+
         else:
             question = f"""
             VTTファイルの内容を、会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
@@ -101,9 +105,9 @@ def summarize_vtt(vtt_content, retriever, api_key, use_pdf):
             {vtt_content}
             """
 
-        result = qa_chain.invoke({"query": question})
+            result = gemini_model.generate_content(question)
+            return result.text
 
-        return result["result"]
     except Exception as e:
         st.error(f"Error during summarization: {str(e)}")
         return ""
@@ -142,14 +146,11 @@ def main():
                     if retriever:
                         with st.spinner("Summarizing VTT based on PDF..."):
                             summary = summarize_vtt(
-                                processed_vtt, retriever, api_key, use_pdf=True
-                            )
+                                processed_vtt, retriever, api_key)
                             st.markdown(f"```text{summary}```")
             else:
                 with st.spinner("Summarizing VTT without PDF..."):
-                    summary = summarize_vtt(
-                        processed_vtt, None, api_key, use_pdf=False
-                    )
+                    summary = summarize_vtt(processed_vtt, None, api_key)
                     st.markdown(f"```text{summary}```")
 
 
