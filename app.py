@@ -54,7 +54,7 @@ def process_vtt_file(vtt_content):
         return ""
 
 
-def summarize_vtt(vtt_content, retriever, api_key):
+def summarize_vtt(vtt_content, retriever, api_key, use_pdf):
     try:
         gemini_model = ChatGoogleGenerativeAI(
             model='gemini-1.5-pro-latest',
@@ -64,26 +64,43 @@ def summarize_vtt(vtt_content, retriever, api_key):
 
         qa_chain = RetrievalQA.from_chain_type(
             gemini_model,
-            retriever=retriever,
+            retriever=retriever if use_pdf else None,  # 如果没有PDF，retriever将为None
             return_source_documents=True
         )
 
-        question = f"""
-        PDFの内容を基づいて、VTTファイルの内容を会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
+        if use_pdf:
+            question = f"""
+            PDFの内容を基づいて、VTTファイルの内容を会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
 
-        1. 参加者: （会議に参加した人たちの名前）
-        2. 会議日時: （会議が行われた日時）
-        3. 議事録:
-            - (議論された主な内容を7つの箇条書きで示してください)
-        4. 結論:
-            - (得られた結論)
-        5. 根拠:
-            - (結論に至った理由やPDFの内容に基づいた根拠)
+            1. 参加者: （会議に参加した人たちの名前）
+            2. 会議日時: （会議が行われた日時）
+            3. 議事録:
+                - (議論された主な内容を7つの箇条書きで示してください)
+            4. 結論:
+                - (得られた結論)
+            5. 根拠:
+                - (結論に至った理由やPDFの内容に基づいた根拠)
 
-        VTTファイルの内容はこちらです:
+            VTTファイルの内容はこちらです:
 
-        {vtt_content}
-        """
+            {vtt_content}
+            """
+        else:
+            question = f"""
+            VTTファイルの内容を、会議記録としてまとめてください。出力フォーマットは以下のようにしてください。
+
+            1. 参加者: （会議に参加した人たちの名前）
+            2. 会議日時: （会議が行われた日時）
+            3. 議事録:
+                - (議論された主な内容を7つの箇条書きで示してください)
+            4. 結論:
+                - (得られた結論)
+
+            VTTファイルの内容はこちらです:
+
+            {vtt_content}
+            """
+
         result = qa_chain.invoke({"query": question})
 
         return result["result"]
@@ -91,35 +108,49 @@ def summarize_vtt(vtt_content, retriever, api_key):
         st.error(f"Error during summarization: {str(e)}")
         return ""
 
+
 def main():
     st.title("⚡RAG＋VTT議事録BOT🤖")
     st.markdown(
-    """
-    1. GoogleのAPIを入力
-    2. RAG対象のPDFをアップロード(私はPDFしか読まない!)
-    3. サマリ対象のVTTファイルをアップロード(Teamsから字幕ファイルを出力!)
+        """
+    手順：
+    1. GoogleのAPIキーを入力する
+    2. (オプション)RAG対象のPDFをアップロードする(私はPDFしか読まない!)
+    3. (必須)サマリ対象のVTTファイルをアップロードする(Teamsから字幕ファイルを出力されたフィアル)
     4. 結果待つ
     """
     )
 
     api_key = st.text_input("Enter your Google API key", type="password")
 
-    if api_key:
-        uploaded_pdf = st.file_uploader("Upload your PDF file", type="pdf")
+    uploaded_pdf = st.file_uploader(
+        "Upload your PDF file (optional)", type="pdf")
+    uploaded_vtt = st.file_uploader(
+        "Upload your VTT file (required)", type="vtt")
 
-        uploaded_vtt = st.file_uploader("Upload your VTT file", type="vtt")
+    if st.button("Summarize"):
+        if not uploaded_vtt:
+            st.error("VTTファイルは必須です。VTTファイルをアップロードしてください。")
+        else:
 
-        if uploaded_pdf and uploaded_vtt:
-            with st.spinner("Processing PDF..."):
-                retriever = process_pdf(uploaded_pdf, api_key)
+            vtt_content = uploaded_vtt.read().decode('utf-8')
+            processed_vtt = process_vtt_file(vtt_content)
 
-                if retriever:
-                    vtt_content = uploaded_vtt.read().decode('utf-8')
-                    processed_vtt = process_vtt_file(vtt_content)
-
-                    with st.spinner("Summarizing VTT based on PDF..."):
-                        summary = summarize_vtt(processed_vtt, retriever, api_key)
-                        st.markdown(f"```text{summary}```")
+            if uploaded_pdf:
+                with st.spinner("Processing PDF..."):
+                    retriever = process_pdf(uploaded_pdf, api_key)
+                    if retriever:
+                        with st.spinner("Summarizing VTT based on PDF..."):
+                            summary = summarize_vtt(
+                                processed_vtt, retriever, api_key, use_pdf=True
+                            )
+                            st.markdown(f"```text{summary}```")
+            else:
+                with st.spinner("Summarizing VTT without PDF..."):
+                    summary = summarize_vtt(
+                        processed_vtt, None, api_key, use_pdf=False
+                    )
+                    st.markdown(f"```text{summary}```")
 
 
 if __name__ == "__main__":
